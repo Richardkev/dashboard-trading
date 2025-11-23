@@ -591,13 +591,47 @@
         }
 
         /* RESPONSIVE */
+
+        /* RESPONSIVE AMÉLIORÉ */
+        @media (max-width: 1200px) {
+            .main-content {
+                padding: 30px;
+            }
+            
+            .grid-3 {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+            
+            .resource-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+
+        @media (max-width: 992px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .resource-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-title {
+                font-size: 24px;
+            }
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 width: 70px;
                 padding: 20px 10px;
             }
 
-            .logo-text, .nav-title, .checklist-text {
+            .logo-text, .nav-title {
                 display: none;
             }
 
@@ -610,15 +644,170 @@
                 justify-content: center;
             }
 
+            .nav-item span:not(.nav-icon) {
+                display: none;
+            }
+            
             .traffic-light {
                 padding: 15px;
             }
+            
+            .page-title {
+                font-size: 22px;
+            }
+            
+            .page-subtitle {
+                font-size: 13px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .stat-value {
+                font-size: 24px;
+            }
+            
+            .resource-card {
+                padding: 20px;
+            }
+            
+            .resource-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+            
+            .resource-info h3 {
+                font-size: 16px;
+            }
+            
+            .category-filter {
+                flex-direction: column;
+            }
+            
+            .filter-btn {
+                width: 100%;
+            }
+            
+            .table-container {
+                font-size: 13px;
+            }
+            
+            .table th, .table td {
+                padding: 10px 8px;
+                font-size: 12px;
+            }
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+            
+            .page-title {
+                font-size: 20px;
+            }
+            
+            .card {
+                padding: 16px;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+            
+            .form-input, .form-select, .form-textarea {
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+            
+            .stat-value {
+                font-size: 20px;
+            }
+            
+            .stat-label {
+                font-size: 11px;
+            }
+            
+            .resource-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .resource-actions {
+                flex-direction: column;
+            }
+            
+            .resource-btn {
+                width: 100%;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            .checklist-item {
+                padding: 10px;
+            }
+            
+            .checkbox {
+                width: 18px;
+                height: 18px;
+            }
+        }
+
+        /* Responsive pour les tableaux */
+        @media (max-width: 768px) {
+            .table thead {
+                display: none;
+            }
+            
+            .table tr {
+                display: block;
+                margin-bottom: 15px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 10px;
+            }
+            
+            .table td {
+                display: block;
+                text-align: left;
+                padding: 8px;
+                border: none;
+            }
+            
+            .table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: var(--text-secondary);
+                display: block;
+                margin-bottom: 5px;
+                font-size: 11px;
+                text-transform: uppercase;
+            }
+        }
+
+        /* Amélioration touch pour mobile */
+        @media (hover: none) and (pointer: coarse) {
+            .nav-item, .checklist-item, .resource-card, .btn, .filter-btn {
+                cursor: pointer;
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            .nav-item:active, .btn:active {
+                transform: scale(0.98);
+            }
+        }
+
         }
 
         .empty-icon {
@@ -2099,22 +2288,39 @@
                 return;
             }
             
-            grid.innerHTML = resourcesToShow.map(resource => `
-                <div class="resource-card">
-                    <div class="resource-header">
-                        <div class="resource-icon">${resource.icon}</div>
-                        <div class="resource-info">
-                            <h3>${resource.titre}<span class="resource-badge">ESSENTIEL</span></h3>
-                            <div class="resource-meta">${resource.meta}</div>
-                        </div>
-                    </div>
-                    <div class="resource-description">${resource.description}</div>
-                    <div class="resource-actions">
+            grid.innerHTML = resourcesToShow.map(resource => {
+                // Déterminer les boutons selon le type de ressource
+                let buttons = '';
+                if (resource.type === 'video') {
+                    // Pour les vidéos : uniquement "Regarder"
+                    buttons = `<div class="resource-btn" onclick="window.open('${resource.url}', '_blank')" style="flex: 1;">▶️ Regarder</div>`;
+                } else if (resource.type === 'link') {
+                    // Pour les liens : uniquement "Ouvrir"
+                    buttons = `<div class="resource-btn" onclick="window.open('${resource.url}', '_blank')" style="flex: 1;">🔗 Ouvrir</div>`;
+                } else {
+                    // Pour PDF et templates : Consulter + Télécharger
+                    buttons = `
                         <div class="resource-btn" onclick="window.open('${resource.url}', '_blank')">📖 Consulter</div>
                         <div class="resource-btn" onclick="window.open('${resource.downloadUrl}', '_blank')">📥 Télécharger</div>
+                    `;
+                }
+                
+                return `
+                    <div class="resource-card">
+                        <div class="resource-header">
+                            <div class="resource-icon">${resource.icon}</div>
+                            <div class="resource-info">
+                                <h3>${resource.titre}<span class="resource-badge">ESSENTIEL</span></h3>
+                                <div class="resource-meta">${resource.meta}</div>
+                            </div>
+                        </div>
+                        <div class="resource-description">${resource.description}</div>
+                        <div class="resource-actions">
+                            ${buttons}
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function filterResourcesByCategory(category) {
