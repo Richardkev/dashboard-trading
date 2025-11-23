@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Day Trader - Wyckoff</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a1f2e;
+            --bg-card: #242b3d;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --text-primary: #e4e6eb;
+            --text-secondary: #9ca3af;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --border: #374151;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            padding: 30px 20px;
+            border-right: 1px solid var(--border);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+            padding: 0 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .nav-section {
+            margin-bottom: 30px;
+        }
+
+        .nav-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            padding: 0 10px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        /* TRAFFIC LIGHT */
+        .traffic-light {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .traffic-light-title {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .lights {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .light {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        .light.red { background: var(--danger); }
+        .light.yellow { background: var(--warning); }
+        .light.green { background: var(--success); }
+
+        .light.active {
+            opacity: 1;
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 40px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-icon {
+            font-size: 20px;
+            opacity: 0.6;
+        }
+
+        /* CHECKLIST */
+        .checklist {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checklist-item:hover {
+            background: #2a3142;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .checklist-item.checked .checkbox {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .checklist-item.checked {
+            opacity: 0.6;
+        }
+
+        .checklist-item.checked .checklist-text {
+            text-decoration: line-through;
+        }
+
+        .checklist-text {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card);
+        }
+
+        /* FORM */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        /* STATS */
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-value.success { color: var(--success); }
+        .stat-value.danger { color: var(--danger); }
+        .stat-value.primary { color: var(--accent-primary); }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* TABLE */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            text-align: left;
+            padding: 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+        }
+
+        .table td {
+            padding: 16px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .table tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge.danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .badge.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        /* WYCKOFF PHASES */
+        .phase-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .phase-btn {
+            padding: 12px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .phase-btn:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .phase-btn.selected {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        .wyckoff-diagram {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .wyckoff-diagram img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .pattern-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pattern-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .pattern-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .pattern-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .pattern-image {
+            width: 100%;
+            height: 150px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--text-secondary);
+        }
+
+        .mood-selector {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .mood-option {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mood-option:hover {
+            transform: scale(1.1);
+        }
+
+        .mood-option.selected {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+                padding: 20px 10px;
+            }
+
+            .logo-text, .nav-title, .checklist-text {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 70px;
+                padding: 20px;
+            }
+
+            .nav-item {
+                justify-content: center;
+            }
+
+            .traffic-light {
+                padding: 15px;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .chart-container {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        .golden-rules {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .rule-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .rule-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .rule-number {
+            width: 24px;
+            height: 24px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .rule-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">📈</div>
+                <div class="logo-text">Wyckoff Trader</div>
+            </div>
+
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-title">Trading</div>
+                    <div class="nav-item active" onclick="switchPage('dashboard')">
+                        <span class="nav-icon">🎯</span>
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="nav-item" onclick="switchPage('session')">
+                        <span class="nav-icon">📊</span>
+                        <span>Session Logger</span>
+                    </div>
+                    <div class="nav-item" onclick="switchPage('trade-logger')">
+                        <span class="nav-icon">✍️</span>
+                        <span>Trade Logger</span>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-title">Apprentissage</div>
+                    <div class="nav-item" onclick="switchPage('wyckoff')">
+                        <span class="nav-icon">📚</span>
+                        <span>Méthode Wyckoff</span>
+                    </div>
+                    <div class="nav-item" onclick="switchPage('quiz')">
+                        <span class="nav-icon">🎓</span>
+                        <span>Quiz</span>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-title">Outils</div>
+                    <div class="nav-item" onclick="switchPage('calculator')">
+                        <span class="nav-icon">🧮</span>
+                        <span>Calculateur</span>
+                    </div>
+                    <div class="nav-item" onclick="switchPage('journal')">
+                        <span class="nav-icon">📖</span>
+                        <span>Journal</span>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="traffic-light">
+                <div class="traffic-light-title">ÉTAT DU TRADING</div>
+                <div class="lights">
+                    <div class="light red" id="light-red"></div>
+                    <div class="light yellow" id="light-yellow"></div>
+                    <div class="light green active" id="light-green"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- PAGE: DASHBOARD -->
+            <div id="dashboard" class="page active">
+                <div class="page-header">
+                    <h1 class="page-title">🎯 Centre de Commande</h1>
+                    <p class="page-subtitle">Préparez votre session de trading</p>
+                </div>
+
+                <div class="grid grid-3" style="margin-bottom: 30px;">
+                    <div class="stat-card">
+                        <div class="stat-value success" id="pnl-today">+0€</div>
+                        <div class="stat-label">P&L Aujourd'hui</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value primary" id="trades-today">0</div>
+                        <div class="stat-label">Trades du jour</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="daily-score">0/100</div>
+                        <div class="stat-label">Score Discipline</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">✅ Checklist Pré-Trading</h3>
+                            <span class="card-icon">📋</span>
+                        </div>
+                        <div class="checklist" id="checklist">
+                            <div class="checklist-item" onclick="toggleChecklistItem(this)">
+                                <div class="checkbox"></div>
+                                <div class="checklist-text">Routine du matin complétée</div>
+                            </div>
+                            <div class="checklist-item" onclick="toggleChecklistItem(this)">
+                                <div class="checkbox"></div>
+                                <div class="checklist-text">Émotions évaluées et stables</div>
+                            </div>
+                            <div class="checklist-item" onclick="toggleChecklistItem(this)">
+                                <div class="checkbox"></div>
+                                <div class="checklist-text">Conditions de marché analysées</div>
+                            </div>
+                            <div class="checklist-item" onclick="toggleChecklistItem(this)">
+                                <div class="checkbox"></div>
+                                <div class="checklist-text">Phase Wyckoff identifiée</div>
+                            </div>
+                            <div class="checklist-item" onclick="toggleChecklistItem(this)">
+                                <div class="checkbox"></div>
+                                <div class="checklist-text">Niveaux clés marqués sur les charts</div>
+                            </div>
+                            <div class="checklist-item" onclick="toggleChecklistItem(this)">
+                                <div class="checkbox"></div>
+                                <div class="checklist-text">Objectif de session défini</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" style="margin-top: 20px; width: 100%;" onclick="openMoodModal()">
+                            🧠 Évaluer mon état émotionnel
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🛡️ Règles d'Or</h3>
+                            <span class="card-icon">⚡</span>
+                        </div>
+                        <div class="golden-rules">
+                            <div class="rule-item">
+                                <div class="rule-number">1</div>
+                                <div class="rule-text">Pas de trade sans analyse Wyckoff complète</div>
+                            </div>
+                            <div class="rule-item">
+                                <div class="rule-number">2</div>
+                                <div class="rule-text">Respecter TOUJOURS le stop loss</div>
+                            </div>
+                            <div class="rule-item">
+                                <div class="rule-number">3</div>
+                                <div class="rule-text">Maximum 3 trades par jour</div>
+                            </div>
+                            <div class="rule-item">
+                                <div class="rule-number">4</div>
+                                <div class="rule-text">Si 2 pertes consécutives → PAUSE obligatoire</div>
+                            </div>
+                            <div class="rule-item">
+                                <div class="rule-number">5</div>
+                                <div class="rule-text">Ne jamais trader sous le coup de l'émotion</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h3 class="card-title">🕒 Market Timer</h3>
+                        <span class="card-icon">⏰</span>
+                    </div>
+                    <div class="grid grid-3">
+                        <div style="text-align: center; padding: 20px; background: var(--bg-secondary); border-radius: 10px;">
+                            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">Pre-Market</div>
+                            <div style="font-size: 20px; font-weight: 600;">04:00 - 09:30</div>
+                        </div>
+                        <div style="text-align: center; padding: 20px; background: var(--success); border-radius: 10px; color: white;">
+                            <div style="font-size: 14px; margin-bottom: 8px; opacity: 0.9;">Regular Session</div>
+                            <div style="font-size: 20px; font-weight: 600;">09:30 - 16:00</div>
+                        </div>
+                        <div style="text-align: center; padding: 20px; background: var(--bg-secondary); border-radius: 10px;">
+                            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">After Hours</div>
+                            <div style="font-size: 20px; font-weight: 600;">16:00 - 20:00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE: SESSION LOGGER -->
+            <div id="session" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">📊 Session Logger</h1>
+                    <p class="page-subtitle">Documentez votre analyse du marché</p>
+                </div>
+
+                <div class="card">
+                    <form onsubmit="saveSession(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-input" id="session-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Horaire de session</label>
+                                <input type="text" class="form-input" placeholder="Ex: 09:30 - 12:00" id="session-time">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Phase Wyckoff observée</label>
+                            <div class="phase-selector">
+                                <div class="phase-btn" onclick="selectPhase(this, 'Accumulation')">📥 Accumulation</div>
+                                <div class="phase-btn" onclick="selectPhase(this, 'Markup')">📈 Markup</div>
+                                <div class="phase-btn" onclick="selectPhase(this, 'Distribution')">📤 Distribution</div>
+                                <div class="phase-btn" onclick="selectPhase(this, 'Markdown')">📉 Markdown</div>
+                                <div class="phase-btn" onclick="selectPhase(this, 'Range')">↔️ Range</div>
+                            </div>
+                            <input type="hidden" id="session-phase">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Biais directionnel</label>
+                            <select class="form-select" id="session-bias" required>
+                                <option value="">Sélectionner...</option>
+                                <option value="Haussier">🟢 Haussier</option>
+                                <option value="Baissier">🔴 Baissier</option>
+                                <option value="Neutre">⚪ Neutre / Range</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Dominance Volume</label>
+                            <select class="form-select" id="session-volume">
+                                <option value="">Sélectionner...</option>
+                                <option value="Acheteurs">🟢 Dominance Acheteurs</option>
+                                <option value="Vendeurs">🔴 Dominance Vendeurs</option>
+                                <option value="Équilibre">⚖️ Équilibre</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Notes d'observation</label>
+                            <textarea class="form-textarea" id="session-notes" placeholder="Décrivez ce que le marché raconte aujourd'hui...&#10;&#10;Exemples:&#10;- Spring détecté sur le support majeur&#10;- Volume climactique sur la résistance&#10;- Compression dans un range étroit"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">💾 Enregistrer la Session</button>
+                    </form>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h3 class="card-title">Historique des Sessions</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="table" id="session-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Phase Wyckoff</th>
+                                    <th>Biais</th>
+                                    <th>Volume</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="session-history">
+                                <tr>
+                                    <td colspan="5">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">📊</div>
+                                            <div>Aucune session enregistrée</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE: TRADE LOGGER -->
+            <div id="trade-logger" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">✍️ Trade Logger</h1>
+                    <p class="page-subtitle">Enregistrez vos trades rapidement</p>
+                </div>
+
+                <div class="card">
+                    <form onsubmit="saveTrade(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Actif tradé</label>
+                                <input type="text" class="form-input" id="trade-asset" placeholder="Ex: AAPL, ES, BTC" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Direction</label>
+                                <select class="form-select" id="trade-direction" required>
+                                    <option value="">Sélectionner...</option>
+                                    <option value="Long">🟢 Long</option>
+                                    <option value="Short">🔴 Short</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Raison du trade (Pattern Wyckoff)</label>
+                            <select class="form-select" id="trade-reason" required>
+                                <option value="">Sélectionner...</option>
+                                <option value="Spring">Spring (Test du support)</option>
+                                <option value="Upthrust">Upthrust (Test de la résistance)</option>
+                                <option value="SOS">SOS - Sign of Strength</option>
+                                <option value="SOW">SOW - Sign of Weakness</option>
+                                <option value="LPS">LPS - Last Point of Support</option>
+                                <option value="LPSY">LPSY - Last Point of Supply</option>
+                                <option value="Accumulation">Sortie d'Accumulation</option>
+                                <option value="Distribution">Sortie de Distribution</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Entry</label>
+                                <input type="number" step="0.01" class="form-input" id="trade-entry" placeholder="Prix d'entrée" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Stop Loss</label>
+                                <input type="number" step="0.01" class="form-input" id="trade-sl" placeholder="Prix SL" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Take Profit</label>
+                                <input type="number" step="0.01" class="form-input" id="trade-tp" placeholder="Prix TP" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Risk:Reward Ratio</label>
+                            <input type="text" class="form-input" id="trade-rr" placeholder="Calculé automatiquement" readonly>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">📝 Enregistrer le Trade</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- PAGE: WYCKOFF -->
+            <div id="wyckoff" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">📚 Méthode Wyckoff</h1>
+                    <p class="page-subtitle">Les fondamentaux de l'analyse Wyckoff</p>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title" style="margin-bottom: 20px;">Les 4 Phases du Cycle</h3>
+                    <div class="wyckoff-diagram">
+                        <svg viewBox="0 0 800 300" style="max-width: 100%; height: auto;">
+                            <!-- Phase A - Accumulation -->
+                            <rect x="50" y="150" width="150" height="100" fill="rgba(99, 102, 241, 0.2)" stroke="#6366f1" stroke-width="2"/>
+                            <text x="125" y="130" text-anchor="middle" fill="#6366f1" font-weight="600" font-size="14">PHASE A</text>
+                            <text x="125" y="200" text-anchor="middle" fill="#9ca3af" font-size="12">Accumulation</text>
+                            
+                            <!-- Phase B - Markup -->
+                            <path d="M 200 200 L 350 100" stroke="#10b981" stroke-width="3" fill="none"/>
+                            <text x="275" y="130" text-anchor="middle" fill="#10b981" font-weight="600" font-size="14">PHASE B</text>
+                            <text x="275" y="150" text-anchor="middle" fill="#9ca3af" font-size="12">Markup</text>
+                            
+                            <!-- Phase C - Distribution -->
+                            <rect x="350" y="50" width="150" height="100" fill="rgba(239, 68, 68, 0.2)" stroke="#ef4444" stroke-width="2"/>
+                            <text x="425" y="30" text-anchor="middle" fill="#ef4444" font-weight="600" font-size="14">PHASE C</text>
+                            <text x="425" y="100" text-anchor="middle" fill="#9ca3af" font-size="12">Distribution</text>
+                            
+                            <!-- Phase D - Markdown -->
+                            <path d="M 500 100 L 650 200" stroke="#ef4444" stroke-width="3" fill="none"/>
+                            <text x="575" y="170" text-anchor="middle" fill="#ef4444" font-weight="600" font-size="14">PHASE D</text>
+                            <text x="575" y="190" text-anchor="middle" fill="#9ca3af" font-size="12">Markdown</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <h3 class="card-title" style="margin-bottom: 20px;">Patterns Wyckoff Essentiels</h3>
+                    <div class="pattern-grid">
+                        <div class="pattern-card" onclick="openPatternModal('spring')">
+                            <div class="pattern-image">📉🔄</div>
+                            <div class="pattern-title">Spring</div>
+                            <div class="pattern-description">Fausse cassure du support suivie d'un retournement haussier. Signe d'accumulation forte.</div>
+                        </div>
+                        <div class="pattern-card" onclick="openPatternModal('upthrust')">
+                            <div class="pattern-image">📈🔄</div>
+                            <div class="pattern-title">Upthrust</div>
+                            <div class="pattern-description">Fausse cassure de la résistance suivie d'un retournement baissier. Signe de distribution.</div>
+                        </div>
+                        <div class="pattern-card" onclick="openPatternModal('sos')">
+                            <div class="pattern-image">🚀</div>
+                            <div class="pattern-title">SOS - Sign of Strength</div>
+                            <div class="pattern-description">Forte poussée haussière avec volume élevé. Confirme la sortie de l'accumulation.</div>
+                        </div>
+                        <div class="pattern-card" onclick="openPatternModal('sow')">
+                            <div class="pattern-image">⚠️</div>
+                            <div class="pattern-title">SOW - Sign of Weakness</div>
+                            <div class="pattern-description">Forte baisse avec volume élevé. Confirme la sortie de la distribution.</div>
+                        </div>
+                        <div class="pattern-card" onclick="openPatternModal('accumulation')">
+                            <div class="pattern-image">📦</div>
+                            <div class="pattern-title">Schéma d'Accumulation</div>
+                            <div class="pattern-description">Range horizontal avec diminution progressive du volume. Les "mains fortes" accumulent.</div>
+                        </div>
+                        <div class="pattern-card" onclick="openPatternModal('distribution')">
+                            <div class="pattern-image">📤</div>
+                            <div class="pattern-title">Schéma de Distribution</div>
+                            <div class="pattern-description">Range horizontal après une hausse. Les "mains fortes" distribuent leurs positions.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE: QUIZ -->
+            <div id="quiz" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">🎓 Quiz Wyckoff</h1>
+                    <p class="page-subtitle">Testez vos connaissances</p>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title" style="margin-bottom: 20px;">Quiz 1 : Les Bases</h3>
+                    <div class="form-group">
+                        <label class="form-label">1. Qu'est-ce qu'un Spring en analyse Wyckoff ?</label>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div class="phase-btn" onclick="selectQuizAnswer(this, 'q1', false)">
+                                Une cassure de résistance
+                            </div>
+                            <div class="phase-btn" onclick="selectQuizAnswer(this, 'q1', true)">
+                                Une fausse cassure du support suivie d'un retournement haussier
+                            </div>
+                            <div class="phase-btn" onclick="selectQuizAnswer(this, 'q1', false)">
+                                Un indicateur de volume
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 30px;">
+                        <label class="form-label">2. Que signifie SOS ?</label>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div class="phase-btn" onclick="selectQuizAnswer(this, 'q2', false)">
+                                Signal of Sell
+                            </div>
+                            <div class="phase-btn" onclick="selectQuizAnswer(this, 'q2', true)">
+                                Sign of Strength
+                            </div>
+                            <div class="phase-btn" onclick="selectQuizAnswer(this, 'q2', false)">
+                                Stop on Support
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 30px;">
+                        <label class="form-label">3. Quelle phase précède généralement un Markup ?</label>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div class="phase-btn" onclick="selectQuizAnswer(this, 'q3', false)">
+                                Distribution
+                            </div>
+                            <div class="phase-btn" onclick="selectQuizAnswer(this, 'q3', true)">
+                                Accumulation
+                            </div>
+                            <div class="phase-btn" onclick="selectQuizAnswer(this, 'q3', false)">
+                                Markdown
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" style="margin-top: 30px;" onclick="submitQuiz()">
+                        ✅ Valider le Quiz
+                    </button>
+                    <div id="quiz-result" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+
+            <!-- PAGE: CALCULATOR -->
+            <div id="calculator" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">🧮 Calculateur de Position</h1>
+                    <p class="page-subtitle">Calculez votre taille de position optimale</p>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h3 class="card-title" style="margin-bottom: 20px;">Paramètres</h3>
+                        <div class="form-group">
+                            <label class="form-label">Capital total (€)</label>
+                            <input type="number" class="form-input" id="calc-capital" placeholder="10000" value="10000">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Risque par trade (%)</label>
+                            <input type="number" step="0.1" class="form-input" id="calc-risk" placeholder="1" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Prix d'entrée</label>
+                            <input type="number" step="0.01" class="form-input" id="calc-entry" placeholder="100">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Stop Loss</label>
+                            <input type="number" step="0.01" class="form-input" id="calc-sl" placeholder="95">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Take Profit (optionnel)</label>
+                            <input type="number" step="0.01" class="form-input" id="calc-tp" placeholder="110">
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%;" onclick="calculatePosition()">
+                            📊 Calculer
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title" style="margin-bottom: 20px;">Résultats</h3>
+                        <div id="calc-results" style="display: none;">
+                            <div style="background: var(--bg-secondary); padding: 20px; border-radius: 10px; margin-bottom: 15px;">
+                                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 5px;">Taille de position</div>
+                                <div style="font-size: 28px; font-weight: 700; color: var(--accent-primary);" id="result-size">-</div>
+                            </div>
+                            <div style="background: var(--bg-secondary); padding: 20px; border-radius: 10px; margin-bottom: 15px;">
+                                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 5px;">Perte maximum</div>
+                                <div style="font-size: 28px; font-weight: 700; color: var(--danger);" id="result-loss">-</div>
+                            </div>
+                            <div style="background: var(--bg-secondary); padding: 20px; border-radius: 10px; margin-bottom: 15px;">
+                                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 5px;">Gain potentiel</div>
+                                <div style="font-size: 28px; font-weight: 700; color: var(--success);" id="result-profit">-</div>
+                            </div>
+                            <div style="background: var(--bg-secondary); padding: 20px; border-radius: 10px;">
+                                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 5px;">Risk:Reward Ratio</div>
+                                <div style="font-size: 28px; font-weight: 700;" id="result-rr">-</div>
+                            </div>
+                        </div>
+                        <div id="calc-empty" class="empty-state">
+                            <div class="empty-icon">🧮</div>
+                            <div>Remplissez les paramètres pour calculer</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE: JOURNAL -->
+            <div id="journal" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">📖 Journal de Trading</h1>
+                    <p class="page-subtitle">Historique et statistiques de vos trades</p>
+                </div>
+
+                <div class="grid grid-3" style="margin-bottom: 30px;">
+                    <div class="stat-card">
+                        <div class="stat-value primary" id="total-trades">0</div>
+                        <div class="stat-label">Total Trades</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value success" id="win-rate">0%</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avg-rr">0:0</div>
+                        <div class="stat-label">R:R Moyen</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Historique des Trades</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Actif</th>
+                                    <th>Direction</th>
+                                    <th>Pattern</th>
+                                    <th>Entry/SL/TP</th>
+                                    <th>R:R</th>
+                                    <th>Résultat</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trades-history">
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">📖</div>
+                                            <div>Aucun trade enregistré</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <h3 class="card-title" style="margin-bottom: 20px;">Courbe d'Équité</h3>
+                    <div class="chart-container">
+                        <div style="text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">📈</div>
+                            <div>Les graphiques s'afficheront après vos premiers trades</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: MOOD -->
+    <div id="mood-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🧠 État Émotionnel</h3>
+                <span class="modal-close" onclick="closeMoodModal()">✕</span>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Comment vous sentez-vous avant cette session ?</p>
+            <div class="mood-selector">
+                <div class="mood-option" onclick="selectMood(this, 'stressed')">😰</div>
+                <div class="mood-option" onclick="selectMood(this, 'anxious')">😟</div>
+                <div class="mood-option" onclick="selectMood(this, 'neutral')">😐</div>
+                <div class="mood-option" onclick="selectMood(this, 'confident')">😊</div>
+                <div class="mood-option" onclick="selectMood(this, 'excellent')">🤩</div>
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                <label class="form-label">Niveau d'énergie (1-10)</label>
+                <input type="range" min="1" max="10" value="5" class="form-input" id="energy-level" 
+                    style="padding: 0; height: 40px;">
+                <div style="text-align: center; margin-top: 5px; color: var(--text-secondary);" id="energy-display">5/10</div>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 20px;" onclick="saveMood()">
+                ✅ Valider
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL: PATTERN -->
+    <div id="pattern-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="pattern-modal-title">Pattern Wyckoff</h3>
+                <span class="modal-close" onclick="closePatternModal()">✕</span>
+            </div>
+            <div id="pattern-modal-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize date inputs
+        document.getElementById('session-date').valueAsDate = new Date();
+
+        // Energy level display
+        document.getElementById('energy-level').addEventListener('input', function() {
+            document.getElementById('energy-display').textContent = this.value + '/10';
+        });
+
+        // Data Storage
+        let appData = {
+            checklist: [],
+            sessions: [],
+            trades: [],
+            mood: null,
+            settings: {}
+        };
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('wyckoffDashboard');
+            if (saved) {
+                appData = JSON.parse(saved);
+                updateStats();
+                renderSessionHistory();
+                renderTradesHistory();
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('wyckoffDashboard', JSON.stringify(appData));
+        }
+
+        // Navigation
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(pageId).classList.add('active');
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        // Checklist
+        function toggleChecklistItem(element) {
+            element.classList.toggle('checked');
+            const checkbox = element.querySelector('.checkbox');
+            checkbox.innerHTML = element.classList.contains('checked') ? '✓' : '';
+            
+            updateTrafficLight();
+            updateDailyScore();
+        }
+
+        function updateTrafficLight() {
+            const checkedItems = document.querySelectorAll('.checklist-item.checked').length;
+            const totalItems = document.querySelectorAll('.checklist-item').length;
+            const percentage = (checkedItems / totalItems) * 100;
+
+            document.querySelectorAll('.light').forEach(l => l.classList.remove('active'));
+
+            if (percentage >= 80) {
+                document.getElementById('light-green').classList.add('active');
+            } else if (percentage >= 50) {
+                document.getElementById('light-yellow').classList.add('active');
+            } else {
+                document.getElementById('light-red').classList.add('active');
+            }
+        }
+
+        function updateDailyScore() {
+            const checkedItems = document.querySelectorAll('.checklist-item.checked').length;
+            const totalItems = document.querySelectorAll('.checklist-item').length;
+            const checklistScore = (checkedItems / totalItems) * 30;
+
+            // Additional scores would come from trade respect, SL, etc.
+            const totalScore = Math.round(checklistScore);
+            document.getElementById('daily-score').textContent = totalScore + '/100';
+        }
+
+        // Phase Selection
+        function selectPhase(element, phase) {
+            document.querySelectorAll('.phase-selector .phase-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            document.getElementById('session-phase').value = phase;
+        }
+
+        // Session Logger
+        function saveSession(e) {
+            e.preventDefault();
+            
+            const session = {
+                id: Date.now(),
+                date: document.getElementById('session-date').value,
+                time: document.getElementById('session-time').value,
+                phase: document.getElementById('session-phase').value,
+                bias: document.getElementById('session-bias').value,
+                volume: document.getElementById('session-volume').value,
+                notes: document.getElementById('session-notes').value
+            };
+
+            appData.sessions.unshift(session);
+            saveData();
+            renderSessionHistory();
+
+            e.target.reset();
+            alert('✅ Session enregistrée avec succès !');
+        }
+
+        function renderSessionHistory() {
+            const tbody = document.getElementById('session-history');
+            
+            if (appData.sessions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <div class="empty-icon">📊</div>
+                                <div>Aucune session enregistrée</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = appData.sessions.map(s => `
+                <tr>
+                    <td>${new Date(s.date).toLocaleDateString('fr-FR')}</td>
+                    <td><span class="badge warning">${s.phase || 'N/A'}</span></td>
+                    <td>${s.bias}</td>
+                    <td>${s.volume || 'N/A'}</td>
+                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${s.notes || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Trade Logger
+        function saveTrade(e) {
+            e.preventDefault();
+
+            const entry = parseFloat(document.getElementById('trade-entry').value);
+            const sl = parseFloat(document.getElementById('trade-sl').value);
+            const tp = parseFloat(document.getElementById('trade-tp').value);
+
+            const risk = Math.abs(entry - sl);
+            const reward = Math.abs(tp - entry);
+            const rr = (reward / risk).toFixed(2);
+
+            const trade = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                asset: document.getElementById('trade-asset').value,
+                direction: document.getElementById('trade-direction').value,
+                reason: document.getElementById('trade-reason').value,
+                entry: entry,
+                sl: sl,
+                tp: tp,
+                rr: rr,
+                result: null // To be filled later
+            };
+
+            appData.trades.unshift(trade);
+            saveData();
+            renderTradesHistory();
+            updateStats();
+
+            // Update today's trade count
+            const today = new Date().toDateString();
+            const todayTrades = appData.trades.filter(t => new Date(t.date).toDateString() === today);
+            document.getElementById('trades-today').textContent = todayTrades.length;
+
+            if (todayTrades.length >= 3) {
+                alert('⚠️ Vous avez atteint la limite de 3 trades pour aujourd\'hui !');
+            }
+
+            e.target.reset();
+            alert('✅ Trade enregistré avec succès !');
+        }
+
+        function renderTradesHistory() {
+            const tbody = document.getElementById('trades-history');
+            
+            if (appData.trades.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <div class="empty-icon">📖</div>
+                                <div>Aucun trade enregistré</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = appData.trades.map(t => `
+                <tr>
+                    <td>${new Date(t.date).toLocaleDateString('fr-FR')}</td>
+                    <td><strong>${t.asset}</strong></td>
+                    <td><span class="badge ${t.direction === 'Long' ? 'success' : 'danger'}">${t.direction}</span></td>
+                    <td style="font-size: 12px;">${t.reason}</td>
+                    <td style="font-size: 12px;">${t.entry} / ${t.sl} / ${t.tp}</td>
+                    <td><strong>1:${t.rr}</strong></td>
+                    <td>${t.result ? `<span class="badge ${t.result > 0 ? 'success' : 'danger'}">${t.result > 0 ? '+' : ''}${t.result}€</span>` : '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateStats() {
+            const total = appData.trades.length;
+            document.getElementById('total-trades').textContent = total;
+
+            if (total > 0) {
+                const wins = appData.trades.filter(t => t.result && t.result > 0).length;
+                const winRate = ((wins / total) * 100).toFixed(0);
+                document.getElementById('win-rate').textContent = winRate + '%';
+
+                const avgRR = (appData.trades.reduce((sum, t) => sum + parseFloat(t.rr), 0) / total).toFixed(2);
+                document.getElementById('avg-rr').textContent = '1:' + avgRR;
+            }
+        }
+
+        // Calculate R:R on trade form
+        document.getElementById('trade-entry').addEventListener('input', calculateRR);
+        document.getElementById('trade-sl').addEventListener('input', calculateRR);
+        document.getElementById('trade-tp').addEventListener('input', calculateRR);
+
+        function calculateRR() {
+            const entry = parseFloat(document.getElementById('trade-entry').value);
+            const sl = parseFloat(document.getElementById('trade-sl').value);
+            const tp = parseFloat(document.getElementById('trade-tp').value);
+
+            if (entry && sl && tp) {
+                const risk = Math.abs(entry - sl);
+                const reward = Math.abs(tp - entry);
+                const rr = (reward / risk).toFixed(2);
+                document.getElementById('trade-rr').value = '1:' + rr;
+            }
+        }
+
+        // Mood Modal
+        function openMoodModal() {
+            document.getElementById('mood-modal').classList.add('active');
+        }
+
+        function closeMoodModal() {
+            document.getElementById('mood-modal').classList.remove('active');
+        }
+
+        function selectMood(element, mood) {
+            document.querySelectorAll('.mood-option').forEach(m => m.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function saveMood() {
+            const selectedMood = document.querySelector('.mood-option.selected');
+            if (!selectedMood) {
+                alert('Veuillez sélectionner votre humeur');
+                return;
+            }
+
+            const energy = document.getElementById('energy-level').value;
+            appData.mood = {
+                mood: selectedMood.textContent,
+                energy: energy,
+                date: new Date().toISOString()
+            };
+
+            saveData();
+            closeMoodModal();
+            alert('✅ État émotionnel enregistré !');
+        }
+
+        // Pattern Modal
+        function openPatternModal(patternType) {
+            const patterns = {
+                spring: {
+                    title: '🔄 Spring',
+                    content: `
+                        <p style="margin-bottom: 15px; line-height: 1.6;">Le Spring est une fausse cassure du support dans une phase d'accumulation.</p>
+                        <h4 style="margin: 20px 0 10px; color: var(--accent-primary);">Caractéristiques :</h4>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>Cassure brève du support</li>
+                            <li>Volume faible sur la cassure</li>
+                            <li>Retour rapide au-dessus du support</li>
+                            <li>Signe que les "mains faibles" ont été éliminées</li>
+                        </ul>
+                        <h4 style="margin: 20px 0 10px; color: var(--accent-primary);">Trading :</h4>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>Entry : Au retour au-dessus du support</li>
+                            <li>SL : En dessous du plus bas du Spring</li>
+                            <li>TP : Résistance de la zone d'accumulation</li>
+                        </ul>
+                    `
+                },
+                upthrust: {
+                    title: '📈 Upthrust',
+                    content: `
+                        <p style="margin-bottom: 15px; line-height: 1.6;">L'Upthrust est une fausse cassure de la résistance dans une phase de distribution.</p>
+                        <h4 style="margin: 20px 0 10px; color: var(--accent-primary);">Caractéristiques :</h4>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>Cassure brève de la résistance</li>
+                            <li>Volume peut être élevé (piège à haussiers)</li>
+                            <li>Retour rapide sous la résistance</li>
+                            <li>Signe de distribution par les "mains fortes"</li>
+                        </ul>
+                        <h4 style="margin: 20px 0 10px; color: var(--accent-primary);">Trading :</h4>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>Entry Short : Au retour sous la résistance</li>
+                            <li>SL : Au-dessus du plus haut de l'Upthrust</li>
+                            <li>TP : Support de la zone de distribution</li>
+                        </ul>
+                    `
+                },
+                sos: {
+                    title: '🚀 Sign of Strength (SOS)',
+                    content: `
+                        <p style="margin-bottom: 15px; line-height: 1.6;">Le SOS confirme la sortie de l'accumulation avec une forte demande.</p>
+                        <h4 style="margin: 20px 0 10px; color: var(--accent-primary);">Caractéristiques :</h4>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>Forte poussée haussière</li>
+                            <li>Volume significativement élevé</li>
+                            <li>Clôture proche des plus hauts</li>
+                            <li>Confirme la fin de l'accumulation</li>
+                        </ul>
+                        <h4 style="margin: 20px 0 10px; color: var(--accent-primary);">Trading :</h4>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>Entry : Sur le retracement après le SOS (LPS)</li>
+                            <li>SL : Sous le support de l'accumulation</li>
+                            <li>TP : Niveaux de résistance majeurs</li>
+                        </ul>
+                    `
+                },
+                sow: {
+                    title: '⚠️ Sign of Weakness (SOW)',
+                    content: `
+                        <p style="margin-bottom: 15px; line-height: 1.6;">Le SOW confirme la sortie de la distribution avec une forte offre.</p>
+                        <h4 style="margin: 20px 0 10px; color: var(--accent-primary);">Caractéristiques :</h4>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>Forte chute baissière</li>
+                            <li>Volume significativement élevé</li>
+                            <li>Clôture proche des plus bas</li>
+                            <li>Confirme la fin de la distribution</li>
+                        </ul>
+                        <h4 style="margin: 20px 0 10px; color: var(--accent-primary);">Trading :</h4>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>Entry Short : Sur le rebond après le SOW (LPSY)</li>
+                            <li>SL : Au-dessus de la résistance de distribution</li>
+                            <li>TP : Niveaux de support majeurs</li>
+                        </ul>
+                    `
+                },
+                accumulation: {
+                    title: '📦 Schéma d\'Accumulation',
+                    content: `
+                        <p style="margin-bottom: 15px; line-height: 1.6;">Zone de range horizontal où les institutions accumulent des positions avant une hausse.</p>
+                        <h4 style="margin: 20px 0 10px; color: var(--accent-primary);">Phases :</h4>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li><strong>Phase A :</strong> Arrêt de la tendance baissière</li>
+                            <li><strong>Phase B :</strong> Construction de la cause (range)</li>
+                            <li><strong>Phase C :</strong> Test (Spring)</li>
+                            <li><strong>Phase D :</strong> SOS + LPS</li>
+                            <li><strong>Phase E :</strong> Markup (tendance haussière)</li>
+                        </ul>
+                        <h4 style="margin: 20px 0 10px; color: var(--accent-primary);">Signaux :</h4>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>Volume décroissant dans le range</li>
+                            <li>Prix qui respecte le support/résistance</li>
+                            <li>Spring suivi d'un SOS</li>
+                        </ul>
+                    `
+                },
+                distribution: {
+                    title: '📤 Schéma de Distribution',
+                    content: `
+                        <p style="margin-bottom: 15px; line-height: 1.6;">Zone de range horizontal où les institutions distribuent leurs positions avant une baisse.</p>
+                        <h4 style="margin: 20px 0 10px; color: var(--accent-primary);">Phases :</h4>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li><strong>Phase A :</strong> Arrêt de la tendance haussière</li>
+                            <li><strong>Phase B :</strong> Construction de la cause (range)</li>
+                            <li><strong>Phase C :</strong> Test (Upthrust)</li>
+                            <li><strong>Phase D :</strong> SOW + LPSY</li>
+                            <li><strong>Phase E :</strong> Markdown (tendance baissière)</li>
+                        </ul>
+                        <h4 style="margin: 20px 0 10px; color: var(--accent-primary);">Signaux :</h4>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>Volume élevé dans le haut du range</li>
+                            <li>Échec à faire de nouveaux plus hauts</li>
+                            <li>Upthrust suivi d'un SOW</li>
+                        </ul>
+                    `
+                }
+            };
+
+            const pattern = patterns[patternType];
+            document.getElementById('pattern-modal-title').textContent = pattern.title;
+            document.getElementById('pattern-modal-content').innerHTML = pattern.content;
+            document.getElementById('pattern-modal').classList.add('active');
+        }
+
+        function closePatternModal() {
+            document.getElementById('pattern-modal').classList.remove('active');
+        }
+
+        // Quiz
+        let quizAnswers = {};
+
+        function selectQuizAnswer(element, questionId, isCorrect) {
+            const container = element.parentElement;
+            container.querySelectorAll('.phase-btn').forEach(btn => btn.classList.remove('selected'));
+            element.classList.add('selected');
+            quizAnswers[questionId] = isCorrect;
+        }
+
+        function submitQuiz() {
+            if (Object.keys(quizAnswers).length < 3) {
+                alert('Veuillez répondre à toutes les questions');
+                return;
+            }
+
+            const correct = Object.values(quizAnswers).filter(a => a === true).length;
+            const total = 3;
+            const percentage = Math.round((correct / total) * 100);
+
+            let message = `📊 Résultat : ${correct}/${total} (${percentage}%)\n\n`;
+            if (percentage === 100) {
+                message += '🎉 Parfait ! Vous maîtrisez les bases Wyckoff !';
+            } else if (percentage >= 66) {
+                message += '👍 Bien joué ! Continuez à réviser.';
+            } else {
+                message += '💪 Continuez vos efforts ! Relisez les patterns.';
+            }
+
+            document.getElementById('quiz-result').innerHTML = `
+                <div style="background: ${percentage >= 66 ? 'var(--success)' : 'var(--warning)'}; 
+                            color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">${percentage === 100 ? '🎉' : percentage >= 66 ? '👍' : '💪'}</div>
+                    <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;">Score : ${correct}/${total}</div>
+                    <div style="font-size: 14px; opacity: 0.9;">${percentage}% de réussite</div>
+                </div>
+            `;
+        }
+
+        // Calculator
+        function calculatePosition() {
+            const capital = parseFloat(document.getElementById('calc-capital').value);
+            const riskPercent = parseFloat(document.getElementById('calc-risk').value);
+            const entry = parseFloat(document.getElementById('calc-entry').value);
+            const sl = parseFloat(document.getElementById('calc-sl').value);
+            const tp = parseFloat(document.getElementById('calc-tp').value);
+
+            if (!capital || !riskPercent || !entry || !sl) {
+                alert('Veuillez remplir tous les champs obligatoires');
+                return;
+            }
+
+            const riskAmount = (capital * riskPercent) / 100;
+            const slDistance = Math.abs(entry - sl);
+            const positionSize = Math.round(riskAmount / slDistance);
+
+            document.getElementById('result-size').textContent = positionSize + ' unités';
+            document.getElementById('result-loss').textContent = '-' + riskAmount.toFixed(2) + '€';
+
+            if (tp) {
+                const tpDistance = Math.abs(tp - entry);
+                const potentialProfit = positionSize * tpDistance;
+                const rr = (tpDistance / slDistance).toFixed(2);
+                
+                document.getElementById('result-profit').textContent = '+' + potentialProfit.toFixed(2) + '€';
+                document.getElementById('result-rr').textContent = '1:' + rr;
+            } else {
+                document.getElementById('result-profit').textContent = 'N/A';
+                document.getElementById('result-rr').textContent = 'N/A';
+            }
+
+            document.getElementById('calc-results').style.display = 'block';
+            document.getElementById('calc-empty').style.display = 'none';
+        }
+
+        // Initialize
+        loadData();
+
+        // Close modals on outside click
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
